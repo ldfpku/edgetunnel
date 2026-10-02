@@ -1,0 +1,26 @@
+{
+	"name": "zyvpn",
+	"main": "_worker.js",
+	"compatibility_date": "2026-10-02",
+	"keep_vars": true,
+	"observability": {
+		"enabled": true
+	},
+	// Placement targets a Cloudflare data center near Azure Japan West.
+	"placement": {
+		"region": "azure:japanwest"
+	},
+	"routes": [
+		{
+			"pattern": "dfvpn.smjtools.com",
+			"custom_domain": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "KV",
+			"id": "d9f7c1de779140b39275670fa2d445c1",
+			"remote": true
+		}
+	]
+}

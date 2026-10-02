@@ -37,6 +37,51 @@
 
 ### ⚙️ Workers 部署
 
+同事希望发布到自己的账户时，可将 [AGENT.md](./AGENT.md) 中的指令模板交给 agent；支持 Windows PowerShell 与 WSL2/Linux。
+
+#### 本仓库 Wrangler 发布配置
+
+本仓库只使用根目录的 [wrangler.jsonc](./wrangler.jsonc)：Worker 名称为 `zyvpn`，自定义域名为 `dfvpn.smjtools.com`，兼容日期为 `2026-10-02`。`azure:japanwest` 是放置提示，Worker 运行在邻近 Azure 日本西部的 Cloudflare 数据中心，而不是 Azure 内部。
+
+在目标 Cloudflare 账户中创建账户级 API 令牌，按新版权限界面配置：
+
+| 范围 | 权限 | 用途 |
+| --- | --- | --- |
+| 目标账户的所有 Workers（产品级） | Workers → Admin | 首次创建 `zyvpn`；Editor 只能部署已存在的 Worker |
+| `smjtools.com` 区域 | Workers Routes → Write（界面可能显示 Edit） | 创建或修改 Routes / Custom Domains |
+| `smjtools.com` 区域 | Zone → Read | 查询、核验域名区域 |
+
+不需要 Zone → Edit，也不需要为自动创建的自定义域名 DNS 和证书单独授予 DNS / SSL 编辑权限。不要选择标记为“旧”的 Workers Scripts 作为新配置的首选。Custom Domains 暂不支持单 Worker 范围，涉及域名操作时使用 Workers 产品级权限；首次创建完成后可将 Workers → Admin 降为产品级 Editor，并保留域名操作需要的区域权限。
+
+权限依据：[Workers roles and permissions](https://developers.cloudflare.com/workers/authorization/workers/)。令牌可选权限受创建者自身账户角色限制。
+
+在已被 Git 忽略的根目录 `.env` 中填写部署凭据（不要提交或公开令牌）：
+
+```dotenv
+CLOUDFLARE_API_TOKEN=<目标账户的 API Token>
+CLOUDFLARE_ACCOUNT_ID=<目标账户的 Account ID>
+```
+
+在仓库根目录执行：
+
+```powershell
+npx wrangler deploy --dry-run
+npx wrangler deploy
+```
+
+生成ADMIN密匙
+```powershell
+$b=New-Object byte[] 32; $r=[Security.Cryptography.RandomNumberGenerator]::Create(); try {$r.GetBytes($b); [BitConverter]::ToString($b).Replace('-','')} finally {$r.Dispose()}
+```
+
+域名所属的 `smjtools.com` 必须在目标账户中激活。发布前确认 `dfvpn.smjtools.com` 没有冲突的 DNS 记录或现有 Worker 绑定，避免覆盖其他服务。API Token 只用于部署认证，不是 Worker 的管理员密码；运行时仍需单独设置 `ADMIN` 并按下文绑定 `KV`。
+
+本账户已创建 `DF_KV` 命名空间；[wrangler.jsonc](./wrangler.jsonc) 中的运行时绑定名称必须是 `KV`，不是 `DF_KV`。创建命名空间还需要独立的 Workers KV 创建权限；Workers → Admin 不包含 KV 管理权限。当前 `remote: true` 会让本地开发访问真实 KV，测试时注意不要修改生产数据。
+
+三位同事各 12 个入口候选地址及 v2rayN 导入方法见 [COLLEAGUE-NODES.md](./COLLEAGUE-NODES.md)。入口地址不代表实际出口国家。
+
+当前部署使用单独的 `UUID` Secret 固定节点凭据，`ADMIN` 仍仅作为管理员密码使用。本机 [V2RAYN-PRIVATE.md](./V2RAYN-PRIVATE.md) 提供三组可直接导入的完整节点链接；该文件含真实凭据并被 Git 忽略，不应公开或提交。旧的派生 UUID 节点需重新导入。
+
 <details>
 <summary><code><strong>「 Workers 部署文字教程 」</strong></code></summary>
 
@@ -176,6 +221,45 @@
 | **iOS** | Surge、Shadowrocket、Stash、[Hiddify](https://github.com/hiddify/hiddify-app/releases)、Loon、Egern、[Clashmi](https://clashmi.app/download)、[Karing](https://karing.app/)、Quantumult X |
 | **macOS** | [FlClash](https://github.com/chen08209/FlClash/releases)、[mihomo-party](https://github.com/mihomo-party-org/clash-party/releases)、[Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev/releases)、Surge、[Clashmi](https://clashmi.app/download)、[Karing](https://karing.app/)、[FlyClash](https://github.com/GtxFury/FlyClash/releases) |
 | **鸿蒙** | [ClashBox](https://github.com/xiaobaigroup/ClashBox/releases) |
+---
+
+## 🌐 查询当前公网 IP 与位置
+
+### PowerShell
+
+`cip.cc` 的三种调用方式（指定 `curl` User-Agent，避免返回浏览器页面）：
+
+```powershell
+Invoke-RestMethod http://cip.cc -UserAgent 'curl'
+(Invoke-WebRequest http://cip.cc -UserAgent 'curl' -UseBasicParsing).Content
+curl.exe http://cip.cc
+```
+
+Windows PowerShell 5.1 中 `curl` 默认是 `Invoke-WebRequest` 的别名，使用 `curl.exe` 可明确调用系统 curl。其他来源：
+
+```powershell
+Invoke-RestMethod https://ipinfo.io/json       # JSON 自动转换为对象
+Invoke-RestMethod http://myip.ipip.net         # 纯文本
+```
+
+### WSL2 / Linux
+
+```bash
+curl -fsS http://cip.cc
+curl -fsS https://ipinfo.io/json
+curl -fsS http://myip.ipip.net
+```
+
+这些命令查询的是请求实际经过的公网出口，不会自动测试某个 v2rayN 节点。需明确通过本地 SOCKS5 代理查询时（端口以客户端设置为准）：
+
+```powershell
+curl.exe --proxy socks5h://127.0.0.1:10808 https://ipinfo.io/json
+```
+
+WSL2/Linux 使用同样的 `curl --proxy socks5h://127.0.0.1:10808 https://ipinfo.io/json`；WSL2 中的 `127.0.0.1` 不一定指向 Windows，默认 NAT 模式可能需要 Windows 主机 IP 和客户端允许局域网访问，镜像网络则按实际连通性确认。
+
+HTTP 查询内容未加密，涉及隐私时优先使用 HTTPS 来源；IP 地理信息仅供参考，不是节点国家或可用性的保证。
+
 ---
 
 ## ⭐ 项目热度
