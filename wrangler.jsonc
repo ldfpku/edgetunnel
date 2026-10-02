@@ -6,9 +6,9 @@
 	"observability": {
 		"enabled": true
 	},
-	// Placement targets a Cloudflare data center near Azure Japan West.
+	// Placement targets a Cloudflare data center near AWS US West (Oregon).
 	"placement": {
-		"region": "azure:japanwest"
+		"region": "aws:us-west-2"
 	},
 	"routes": [
 		{

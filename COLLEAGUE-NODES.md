@@ -1,16 +1,16 @@
-# 三位同事的 v2rayN 入口候选地址
+# 四组 v2rayN 入口候选地址
 
 更新日期：2026-10-02。Worker：`zyvpn`；域名：`dfvpn.smjtools.com`。
 
-完整的、可直接复制导入 v2rayN 的三组分享链接保存在本机私密文件 [V2RAYN-PRIVATE.md](./V2RAYN-PRIVATE.md)。该文件含有效 UUID，已被 Git 忽略，不要公开或提交。本文仅保留不含凭据的入口列表和使用说明。
+完整的、可直接复制导入 v2rayN 的四组分享链接保存在本机私密文件 [V2RAYN-PRIVATE.md](./V2RAYN-PRIVATE.md)。A / B / C 各 12 个，D 组 24 个，共 60 个。该文件含有效 UUID，已被 Git 忽略，不要公开或提交。本文仅保留不含凭据的入口列表和使用说明。
 
 ## 国家与验证范围
 
-以下为三组互不重复的 Cloudflare IPv4 入口候选地址，每组 12 个，共 36 个。地址取自 [Cloudflare 官方 IPv4 范围](https://www.cloudflare.com/ips-v4)。不是按 IP 地理定位挑选的日本 / 美国出口，也不是已经完成代理测速的优选排名。
+以下为四组互不重复的 Cloudflare IPv4 入口候选地址，共 60 个。地址取自 [Cloudflare 官方 IPv4 范围](https://www.cloudflare.com/ips-v4)。不是按 IP 地理定位挑选的日本 / 美国出口，也不是已经完成逐个代理测速的优选排名。
 
-**“每组 6 个日本出口 + 6 个美国出口”的条件目前未满足。** Cloudflare 入口 IP 使用 Anycast，同一个 IP 会因访问者网络而连接不同机房；当前所有地址连接同一个 `azure:japanwest` 放置的 Worker。不能把每组后六个入口改名为“美国”就宣称有美国出口。要满足实际出口国家要求，需要可用的美国部署 / 上游，以及各节点的端到端出口验证。
+**“每组 6 个日本出口 + 6 个美国出口”的条件目前未满足。** Cloudflare 入口 IP 使用 Anycast，同一个 IP 会因访问者网络而连接不同机房；当前所有地址连接同一个 `aws:us-west-2` 放置的 Worker。区域提示控制执行位置，不保证出口国家；不能把入口按备注分为“日本 / 美国”就宣称具备对应出口。实际出口国家仍需各节点的端到端验证。
 
-本次从部署机器使用正确的域名 Host / SNI，绕过环境代理逐个测试 HTTPS：最终部署后 36/36 个地址的 `/login` 返回 HTTP 200，TLS 证书校验全部通过。入口可达不等于 VLESS 隧道、最终出口、吞吐或三位同事所在网络均可用；请分别在各自网络中测速。
+原三组曾从部署机器使用正确的域名 Host / SNI，绕过环境代理逐个测试 HTTPS：36/36 个地址的 `/login` 返回 HTTP 200，TLS 证书校验全部通过。同步新增入口时再次检查 HTTPS 与 VLESS / WebSocket 隧道，最新逐节点结果见本机私密文件。单次可用性检查不等于优选排名、最终出口国家、吞吐或各同事所在网络均可用；请分别在各自网络中测速。
 
 ## 同事 A：12 个候选入口
 
@@ -63,6 +63,35 @@
 104.26.5.1:443#C-12
 ```
 
+## 同事 D：24 个候选入口
+
+```text
+104.19.0.1:443#D-01
+104.19.1.1:443#D-02
+104.19.2.1:443#D-03
+104.19.3.1:443#D-04
+104.19.4.1:443#D-05
+104.19.5.1:443#D-06
+104.19.6.1:443#D-07
+104.19.7.1:443#D-08
+104.19.8.1:443#D-09
+104.19.9.1:443#D-10
+104.19.10.1:443#D-11
+104.19.11.1:443#D-12
+104.20.0.1:443#D-13
+104.20.1.1:443#D-14
+104.20.2.1:443#D-15
+104.20.3.1:443#D-16
+104.20.4.1:443#D-17
+104.20.5.1:443#D-18
+104.20.6.1:443#D-19
+104.20.7.1:443#D-20
+104.20.8.1:443#D-21
+104.20.9.1:443#D-22
+104.20.10.1:443#D-23
+104.20.11.1:443#D-24
+```
+
 ## v2rayN 使用方式
 
 这些 `IP:端口#备注` 行是项目优选地址列表格式，**不能直接当作完整节点链接导入 v2rayN**。使用下列任一方式。
@@ -70,7 +99,7 @@
 ### 方式一：沿用现有订阅节点
 
 1. 管理员登录 `https://dfvpn.smjtools.com/admin`，获取项目生成的原始节点 / 订阅，私下交给同事。不要分享 `ADMIN` 密码。
-2. 同事在 v2rayN 导入原始节点，然后复制为 12 个节点。
+2. 同事在 v2rayN 导入原始节点，然后按本组数量复制节点（A / B / C 各 12 个，D 组 24 个）。
 3. 分别将连接地址改为本组 IP，端口设为 `443`；只改连接地址和备注，保留原始节点的 UUID、传输方式、路径、TLS SNI 和 WebSocket Host。
 4. TLS SNI 和 WebSocket Host 应保持 `dfvpn.smjtools.com`，不能改成 IP；不要关闭证书验证。
 5. 对各节点进行真连接延迟和速度测试，再选择稳定节点。需要出口国家时，通过实际代理访问 IP 查询服务验证，不要依靠备注判断。
@@ -79,25 +108,26 @@
 
 仅适用于后台仍使用 VLESS、WebSocket、路径 `/` 的默认配置；若你已修改协议、路径或其他传输设置，使用方式一，不要套用本示例。
 
-在仓库根目录执行以下 PowerShell，将提示输入组别及后台显示的 UUID；**UUID 不是 ADMIN 密码，也不是 Cloudflare API Token**。脚本生成本组 12 个链接并复制到剪贴板，随后在 v2rayN 中选择“从剪贴板导入分享链接”。
+在仓库根目录执行以下 PowerShell，将提示输入组别及后台显示的 UUID；**UUID 不是 ADMIN 密码，也不是 Cloudflare API Token**。脚本生成本组所有链接并复制到剪贴板，随后在 v2rayN 中选择“从剪贴板导入分享链接”。
 
 ```powershell
-$group = (Read-Host 'Group A, B or C').Trim().ToUpperInvariant()
-if ($group -notmatch '^[ABC]$') { throw 'Group must be A, B or C.' }
+$group = (Read-Host 'Group A, B, C or D').Trim().ToUpperInvariant()
+if ($group -notmatch '^[ABCD]$') { throw 'Group must be A, B, C or D.' }
 $uuid = (Read-Host 'Node UUID from admin panel').Trim()
 if ($uuid -notmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$') { throw 'A valid UUIDv4 is required.' }
 $text = Get-Content -LiteralPath '.\COLLEAGUE-NODES.md' -Raw
 $entries = [regex]::Matches($text, "(?m)^(104\.\d+\.\d+\.1):443#($group-\d{2})\r?$")
-if ($entries.Count -ne 12) { throw 'Expected exactly 12 entries for the selected group.' }
+$expectedCount = if ($group -eq 'D') { 24 } else { 12 }
+if ($entries.Count -ne $expectedCount) { throw "Expected exactly $expectedCount entries for the selected group." }
 $links = foreach ($entry in $entries) {
     'vless://{0}@{1}:443?security=tls&type=ws&host=dfvpn.smjtools.com&fp=chrome&sni=dfvpn.smjtools.com&path=%2F&encryption=none#{2}' -f $uuid, $entry.Groups[1].Value, $entry.Groups[2].Value
 }
 $links -join "`r`n" | Set-Clipboard
-Write-Host 'Copied 12 private node links. Import them into v2rayN; clear the clipboard afterwards.'
+Write-Host "Copied $expectedCount private node links. Import them into v2rayN; clear the clipboard afterwards."
 ```
 
 生成后的链接含有效访问凭据，不能提交到 Git、公开发布或交给外部订阅转换服务。此文档不包含真实 UUID、ADMIN 密码或 API Token。
 
 ## 共用凭据的限制
 
-三组只是入口分组，不是三个独立账户。当前项目使用同一套 UUID，无法按组单独撤销某位同事的访问。修改 ADMIN 可能改变派生 UUID / 订阅凭据，三位同事的节点会一起受影响；固定 UUID 后应按相应凭据管理方式撤销访问。
+四组只是入口分组，不是四个独立账户。当前部署使用同一个固定 UUID Secret，无法按组单独撤销某位同事的访问；轮换该 UUID 会影响四组节点。ADMIN 仍仅作为管理员密码，不应向同事分享；若改回派生 UUID 模式，修改 ADMIN 也可能影响节点凭据。

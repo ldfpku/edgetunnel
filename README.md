@@ -41,7 +41,9 @@
 
 #### 本仓库 Wrangler 发布配置
 
-本仓库只使用根目录的 [wrangler.jsonc](./wrangler.jsonc)：Worker 名称为 `zyvpn`，自定义域名为 `dfvpn.smjtools.com`，兼容日期为 `2026-10-02`。`azure:japanwest` 是放置提示，Worker 运行在邻近 Azure 日本西部的 Cloudflare 数据中心，而不是 Azure 内部。
+本仓库只使用根目录的 [wrangler.jsonc](./wrangler.jsonc)：Worker 名称为 `zyvpn`，自定义域名为 `dfvpn.smjtools.com`，兼容日期为 `2026-10-02`。`aws:us-west-2` 是放置提示，Worker 运行在对 AWS 美国西部（俄勒冈）区域延迟最低的 Cloudflare 数据中心，而不是 AWS 内部；它不固定客户端入口，也不保证出口国家。机制依据：[Cloudflare Placement](https://developers.cloudflare.com/workers/configuration/placement/)。
+
+当前区域根据 2026-10-02 的“日本 → 美西 → 日本复测”选择：固定入口 `104.16.0.1:443`、关闭 mux 与 leastPing 自动选路，通过独立本地代理访问 [Vultr 洛杉矶测速服务器](https://lax-ca-us-ping.vultr.com/)，固定目标 IP `108.61.219.200` 并保留 HTTPS 证书验证。每阶段分别请求前 1 KiB 与前 1 MiB，各 30 次，180 次正式请求全部成功。美西首字节时间中位数降低约 21%–26%，1 MiB 请求总耗时中位数降低约 15%，P95 也更低。此结果仅适用于本次时段、固定入口及目标，不等同于节点 RTT，也不保证所有网站或其他线路更快；更换线路或目标后应重新对比。复测需验证 HTTP 206、Content-Range 和下载字节数，并保留失败样本；不要使用会由 Worker 本地回包的 `speed.cloudflare.com` / `cp.cloudflare.com` 作为真实美国服务基准。
 
 在目标 Cloudflare 账户中创建账户级 API 令牌，按新版权限界面配置：
 
@@ -78,9 +80,9 @@ $b=New-Object byte[] 32; $r=[Security.Cryptography.RandomNumberGenerator]::Creat
 
 本账户已创建 `DF_KV` 命名空间；[wrangler.jsonc](./wrangler.jsonc) 中的运行时绑定名称必须是 `KV`，不是 `DF_KV`。创建命名空间还需要独立的 Workers KV 创建权限；Workers → Admin 不包含 KV 管理权限。当前 `remote: true` 会让本地开发访问真实 KV，测试时注意不要修改生产数据。
 
-三位同事各 12 个入口候选地址及 v2rayN 导入方法见 [COLLEAGUE-NODES.md](./COLLEAGUE-NODES.md)。入口地址不代表实际出口国家。
+四组入口候选地址及 v2rayN 导入方法见 [COLLEAGUE-NODES.md](./COLLEAGUE-NODES.md)：A / B / C 各 12 个，D 组 24 个，共 60 个。入口地址不代表实际出口国家。
 
-当前部署使用单独的 `UUID` Secret 固定节点凭据，`ADMIN` 仍仅作为管理员密码使用。本机 [V2RAYN-PRIVATE.md](./V2RAYN-PRIVATE.md) 提供三组可直接导入的完整节点链接；该文件含真实凭据并被 Git 忽略，不应公开或提交。旧的派生 UUID 节点需重新导入。
+当前部署使用单独的 `UUID` Secret 固定节点凭据，`ADMIN` 仍仅作为管理员密码使用。本机 [V2RAYN-PRIVATE.md](./V2RAYN-PRIVATE.md) 提供四组可直接导入的完整节点链接，均连接当前美西放置的 Worker，四组共享凭据而非独立账户；该文件含真实凭据并被 Git 忽略，不应公开或提交。旧的派生 UUID 节点需重新导入。
 
 <details>
 <summary><code><strong>「 Workers 部署文字教程 」</strong></code></summary>
