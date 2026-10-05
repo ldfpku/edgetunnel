@@ -1,0 +1,4 @@
+# Keep the latency scripts runnable regardless of core.autocrlf: bash/python need LF, PowerShell is fine with CRLF.
+tools/latency/*.sh text eol=lf
+tools/latency/*.py text eol=lf
+tools/latency/*.ps1 text eol=crlf

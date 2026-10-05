@@ -45,6 +45,8 @@
 
 当前区域根据 2026-10-02 的“日本 → 美西 → 日本复测”选择：固定入口 `104.16.0.1:443`、关闭 mux 与 leastPing 自动选路，通过独立本地代理访问 [Vultr 洛杉矶测速服务器](https://lax-ca-us-ping.vultr.com/)，固定目标 IP `108.61.219.200` 并保留 HTTPS 证书验证。每阶段分别请求前 1 KiB 与前 1 MiB，各 30 次，180 次正式请求全部成功。美西首字节时间中位数降低约 21%–26%，1 MiB 请求总耗时中位数降低约 15%，P95 也更低。此结果仅适用于本次时段、固定入口及目标，不等同于节点 RTT，也不保证所有网站或其他线路更快；更换线路或目标后应重新对比。复测需验证 HTTP 206、Content-Range 和下载字节数，并保留失败样本；不要使用会由 Worker 本地回包的 `speed.cloudflare.com` / `cp.cloudflare.com` 作为真实美国服务基准。
 
+客户端延迟排查（2026-10-05）：v2rayN 显示 300 ms 以上甚至超时，原因依次是本机 Cloudflare WARP 全隧道（落点 LAX、估算 285 ms）接管了节点流量、入口 IP 落点 LAX（约 200–240 ms）、以及路径 `/` 未启用 WebSocket 早数据。关闭 WARP 或把入口段排除出 WARP、改用落点 SJC 的 `104.17.128.0/19` 等入口、路径改为 `/?ed=2560` 后，tcping 约 165–180 ms；经 Worker 的真连接延迟约 0.8–0.95 s，受线路 RTT 限制无法再低。放置区域未改动。入口列表与测量方法见 [COLLEAGUE-NODES.md](./COLLEAGUE-NODES.md) 和 [tools/latency](./tools/latency/README.md)。
+
 在目标 Cloudflare 账户中创建账户级 API 令牌，按新版权限界面配置：
 
 | 范围 | 权限 | 用途 |
