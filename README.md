@@ -264,6 +264,37 @@ WSL2/Linux 使用同样的 `curl --proxy socks5h://127.0.0.1:10808 https://ipinf
 
 HTTP 查询内容未加密，涉及隐私时优先使用 HTTPS 来源；IP 地理信息仅供参考，不是节点国家或可用性的保证。
 
+### 响应速度与延迟
+
+对应 v2rayN 的两个指标：「延迟」列约等于到入口 IP 的一次 TCP 往返，「真连接延迟」约等于经代理完成一次 HTTPS 请求（约 4 次往返）。下面 `-w` 里的 `time_connect` 和 `time_total` 就是这两个数，单位秒。直连探测必须加 `--noproxy "*"`，否则会被环境变量里的代理接管；入口 IP 换成自己组里的任意一个。
+
+#### PowerShell
+
+```powershell
+# 1. 入口延迟：直连某个入口 IP，带真实 SNI（对应 v2rayN「延迟」列，大陆到美西一般 0.16–0.24 s）
+curl.exe --noproxy "*" -o NUL -sS --resolve dfvpn.smjtools.com:443:104.17.157.1 -w 'connect %{time_connect}s  tls %{time_appconnect}s  http %{http_code}\n' https://dfvpn.smjtools.com/
+
+# 2. 真连接延迟：经代理访问 generate_204，连测 5 次（对应 v2rayN「真连接延迟」，正常 0.8–1.2 s）
+1..5 | ForEach-Object { curl.exe --proxy socks5h://127.0.0.1:10808 -o NUL -sS -w 'HTTP %{http_code}  total %{time_total}s\n' https://www.google.com/generate_204 }
+
+# 3. 出口 IP、位置与响应时间一起看
+curl.exe --proxy socks5h://127.0.0.1:10808 -sS -w '\ntotal %{time_total}s\n' https://ipinfo.io/json
+
+# 4. 下载速度：经代理下载 10 MB 测试文件（speed_download 单位 B/s，÷1048576 得 MB/s；会消耗流量）
+curl.exe --proxy socks5h://127.0.0.1:10808 -o NUL -sS --max-time 60 -w 'speed %{speed_download} B/s  size %{size_download} B  total %{time_total}s\n' https://proof.ovh.net/files/10Mb.dat
+```
+
+#### WSL2 / Linux
+
+```bash
+curl --noproxy '*' -o /dev/null -sS --resolve dfvpn.smjtools.com:443:104.17.157.1 -w 'connect %{time_connect}s  tls %{time_appconnect}s  http %{http_code}\n' https://dfvpn.smjtools.com/
+for i in 1 2 3 4 5; do curl --proxy socks5h://127.0.0.1:10808 -o /dev/null -sS -w 'HTTP %{http_code}  total %{time_total}s\n' https://www.google.com/generate_204; done
+curl --proxy socks5h://127.0.0.1:10808 -sS -w '\ntotal %{time_total}s\n' https://ipinfo.io/json
+curl --proxy socks5h://127.0.0.1:10808 -o /dev/null -sS --max-time 60 -w 'speed %{speed_download} B/s  size %{size_download} B  total %{time_total}s\n' https://proof.ovh.net/files/10Mb.dat
+```
+
+判读：`connect` 明显高于 0.25 s 且所有入口一样慢，多半是入口流量被 WARP 等隧道接管，先查路由再换 IP；`total` 为 1 s 上下是正常值，受往返次数限制换入口也不会低于约 0.65 s。不要用 Cloudflare 自家的测速地址（如 `speed.cloudflare.com`）经节点测速，Worker 无法连接 Cloudflare 自己的地址，会卡住。逐个入口自动测量与判定见 [tools/startup](./tools/startup/README.md)。
+
 ---
 
 ## ⭐ 项目热度
