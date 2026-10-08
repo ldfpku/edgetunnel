@@ -37,6 +37,8 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
+# 允许 "ip1,ip2" 这种逗号分隔写法（计划任务参数里只能传字符串）
+$EntryIPs = @($EntryIPs | ForEach-Object { $_ -split '[,\s]+' } | Where-Object { $_ })
 $script:LogDir = Join-Path $env:LOCALAPPDATA 'smj-proxy'
 $script:LogFile = Join-Path $script:LogDir 'ensure-proxy.log'
 $script:Curl = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -114,7 +116,35 @@ function Find-V2rayN {
     return $null
 }
 
+function Resolve-DuplicateV2rayN {
+    # 两个 v2rayN 实例会互相抢代理端口，后起的那个报 "failed to listen"，而且它的界面不控制真正在跑的代理。
+    # 保留持有代理端口的实例（监听进程 xray 的父进程），关闭其余的。
+    $procs = @(Get-Process v2rayN -ErrorAction SilentlyContinue)
+    if ($procs.Count -lt 2) { return }
+    $ownerPid = $null
+    try {
+        $listen = Get-NetTCPConnection -LocalPort $ProxyPort -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($listen) {
+            $core = Get-CimInstance Win32_Process -Filter ('ProcessId = {0}' -f $listen.OwningProcess) -ErrorAction SilentlyContinue
+            if ($core) { $ownerPid = [int]$core.ParentProcessId }
+        }
+    } catch { }
+    if (-not $ownerPid) { $ownerPid = ($procs | Sort-Object StartTime | Select-Object -First 1).Id }   # 没人监听端口时保留最早的
+    Write-Log ('发现 {0} 个 v2rayN 实例，保留 PID {1}' -f $procs.Count, $ownerPid)
+    foreach ($p in $procs) {
+        if ($p.Id -eq $ownerPid) { continue }
+        if ($DryRun) { Write-Log ('[DryRun] 将关闭多余的 v2rayN 实例 PID {0}' -f $p.Id); continue }
+        try {
+            Stop-Process -Id $p.Id -Force -ErrorAction Stop
+            Write-Log ('已关闭多余的 v2rayN 实例 PID {0}' -f $p.Id)
+        } catch {
+            Add-Problem ('多余的 v2rayN 实例 PID {0} 无法关闭（可能以管理员身份运行），请手动退出，只保留一个' -f $p.Id)
+        }
+    }
+}
+
 function Ensure-V2rayN {
+    Resolve-DuplicateV2rayN
     if (Get-Process v2rayN -ErrorAction SilentlyContinue) { Write-Log 'v2rayN 已在运行'; return }
     if (Test-TcpPort '127.0.0.1' $ProxyPort) { Write-Log ('端口 {0} 已有服务在监听，不再启动 v2rayN' -f $ProxyPort); return }
     # 给其它自启动方式（例如 v2rayN 自己的开机任务）留出时间，避免启动两个实例互相抢端口

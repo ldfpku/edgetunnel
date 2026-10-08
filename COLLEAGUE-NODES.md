@@ -116,7 +116,7 @@ powershell -ExecutionPolicy Bypass -File .\Optimize-Colleague.ps1 -Prefix B
 
 ### 开机自检脚本
 
-[tools/startup](./tools/startup/README.md) 提供登录后静默运行的自检脚本（Windows 计划任务 / macOS LaunchAgent，不弹窗、不需要管理员）：确认 v2rayN 在运行且只有一个实例、把 Cloudflare One 客户端切到代理模式以免接管节点流量和 DNS、系统代理指向 v2rayN、经代理访问 ip.sb 的出口为美国、入口延迟低于 250 ms，结果写入日志。安装与参数见该目录的 README。
+[tools/startup](./tools/startup/README.md) 提供一键设置：Windows 双击 `一键设置.cmd`，macOS 双击 `一键设置.command`，自动完成全部设置并注册登录后静默运行的检查（Windows 计划任务 / macOS LaunchAgent，不弹窗、不需要管理员）：确认 v2rayN 在运行且只有一个实例、把 Cloudflare One 客户端切到代理模式以免接管节点流量和 DNS、系统代理指向 v2rayN、经代理访问 ip.sb 的出口为美国、入口延迟低于 250 ms，结果写入日志。每个功能块的作用、手动检验命令与还原方法见 [tools/startup/GUIDE.md](./tools/startup/GUIDE.md)。
 
 ### 手动方案
 
