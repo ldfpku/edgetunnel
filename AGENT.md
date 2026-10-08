@@ -102,7 +102,27 @@ openssl rand -hex 32
 - 验证线上自定义域名、最终版本流量、兼容日期、放置及 `KV` 绑定，并确认已有 ADMIN / UUID Secret 未丢失；只检查名称和类型，不输出 Secret 值。
 - 验证 HTTPS 证书及登录页。404 配置提示、1101、缺少 ADMIN / KV 或权限错误应明确报告，不得算作正常应用响应。
 - 若交付节点，使用当前有效 UUID 和实际协议、路径、Host、SNI、端口生成完整分享链接；不得用占位 UUID 或模板冒充可用链接。
-- 完整节点链接放入被 Git 忽略的 `V2RAYN-PRIVATE.md`，分享给用户后不要提交。当前三组共享 UUID，不是独立账户，也不能按组撤销访问。
+- 完整节点链接放入被 Git 忽略的 `V2RAYN-PRIVATE.md`，分享给用户后不要提交。当前各组共享 UUID，不是独立账户，也不能按组撤销访问。
 - HTTPS 入口测试不等于代理验证：还需验证 VLESS / WebSocket 隧道及上游 TLS，区分网站拒绝访问与隧道故障。速度和出口国家须经过实际代理分别测试。
 - 更新 README 中的部署说明，使其与新账户配置一致；不复制本机私密文档到同事的部署。
 - 交付时说明实际发布了什么、验证了什么、哪些要求未满足，以及仍需用户完成的操作。不要宣称 Anycast 入口就是日本 / 美国出口。
+
+### 5. 域级安全设置与节点可用性
+
+域（zone）上的安全设置对该域下所有自定义域名生效，包括 Worker 的代理入口。**开启 Under Attack 模式必须同时配置豁免规则**，否则全部节点立即不可用。
+
+- 现象与原因：Under Attack 模式让域下每个请求先收到 JS 质询页，只有浏览器能通过。xray 的 WebSocket 握手拿不到 `101`，v2rayN 中所有节点延迟为 -1；同一域下由程序调用的主机名（API、网关、授权校验等）会以同样方式失败。此时 Worker、UUID、放置均无故障，不要改动它们。
+- 修复：在面板「规则 → 概述 → 创建规则 → 配置规则」建一条规则，自定义筛选表达式为 `(http.host in {"<代理主机名>" "<其他由程序调用的主机名>"})`，在「则设置将为…」中添加 **I'm Under Attack** 并保持关闭（API 为 `security_level: "essentially_off"`），然后部署。浏览器访问的站点不要加入，它们才是该模式保护的对象。
+- 顺序：先部署规则，再打开 Under Attack 开关。顺序反了，代理会中断到规则生效为止。
+- 面板易错点：表达式框预填了占位内容 `(http.request.full_uri wildcard r"")`，必须整体替换；把表达式接在它后面会报 `unrecognised input`。列表中的主机名用空格分隔，不用逗号。
+- 验证（不需要凭据）：对代理主机名发起 WebSocket 升级请求应返回 `101`，对未豁免的主机名应看到响应头 `cf-mitigated: challenge`。以该响应头为准，不要只看状态码。
+- 维护：Under Attack 开启期间，域下新增的非浏览器主机名都要加入这条规则。本部署中 Bot Fight 模式和浏览器完整性检查开启时节点工作正常，不需要为此调整。
+- 权限与分工：管理配置规则需要目标区域的 Zone › Config Rules › Edit，部署用令牌通常不含该权限。域的安全设置由域所有者在面板中更改；agent 给出精确步骤并做只读验证，不要为此扩大令牌权限，也不要代为切换安全开关。
+
+握手探测示例（PowerShell；WSL2/Linux 把 `curl.exe` 换成 `curl`、`NUL` 换成 `/dev/null`）。返回 `101` 后 curl 会等到超时并以退出码 28 结束，属正常：
+
+```text
+curl.exe --http1.1 --max-time 6 -sS -o NUL -D - -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" https://<代理主机名>/
+```
+
+参考：[Under Attack mode](https://developers.cloudflare.com/fundamentals/reference/under-attack-mode/)、[Configuration Rules settings](https://developers.cloudflare.com/rules/configuration-rules/settings/)、[Rules language: Values](https://developers.cloudflare.com/ruleset-engine/rules-language/values/)。

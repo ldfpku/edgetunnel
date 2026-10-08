@@ -114,6 +114,10 @@ powershell -ExecutionPolicy Bypass -File .\Optimize-Colleague.ps1 -Prefix B
 
 受组织 Zero Trust 策略管理的 WARP 设备可能无法断开或添加排除；脚本会提示。此时请管理员在 Zero Trust 的 Split Tunnels 中排除选出的网段，或者使用 v2rayN 期间断开 WARP。
 
+### 开机自检脚本
+
+[tools/startup](./tools/startup/README.md) 提供登录后静默运行的自检脚本（Windows 计划任务 / macOS LaunchAgent，不弹窗、不需要管理员）：确认 v2rayN 在运行且只有一个实例、把 Cloudflare One 客户端切到代理模式以免接管节点流量和 DNS、系统代理指向 v2rayN、经代理访问 ip.sb 的出口为美国、入口延迟低于 250 ms，结果写入日志。安装与参数见该目录的 README。
+
 ### 手动方案
 
 不方便运行脚本时，按顺序做这三件事即可拿到绝大部分收益：
