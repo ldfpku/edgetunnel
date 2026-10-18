@@ -13,7 +13,7 @@ XRAY="${XRAY:-/c/tools/v2rayN-windows-64/bin/xray/xray.exe}"
 PRIV="$(dirname "$0")/../../V2RAYN-PRIVATE.md"
 unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy
 uuid=$(grep -oE -m1 '[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}' "$PRIV") || { echo "UUID not found in $PRIV"; exit 1; }
-cfg=$(mktemp)
+cfg=$(mktemp --suffix=.json)
 log=$(mktemp)
 python - "$cfg" "$IP" "$P" "$PORT" "$uuid" "$HOST" <<'PY'
 import json, sys
