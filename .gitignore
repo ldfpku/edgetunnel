@@ -42,3 +42,4 @@ log/
 # 同事一键配置包：管理员可临时放入的凭据文件与生成的链接
 tools/colleague-kit/uuid.txt
 tools/colleague-kit/nodes*.txt
+tools/colleague-kit/*.zip

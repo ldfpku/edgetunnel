@@ -109,7 +109,7 @@ v2rayN 侧另有一项可选优化：直连 Cloudflare 入口不需要「TLS 分
 
 ### 一键脚本
 
-**同事一键配置包（推荐）**：[tools/colleague-kit](./tools/colleague-kit/README.md)，Windows 双击 `setup-nodes.cmd`，macOS 运行 `setup-nodes.command`。脚本依次：适配 Cloudflare One / WARP 模式（未安装、已断开、代理模式不动；全隧道时切代理模式，切不动则测量期间临时断开并在结束后加排除网段）→ 在同事自己的网络里对 Cloudflare 全部 IPv4 段每个 /24 探测一个 IP（约 1 分钟）→ 最快 150 个各复测 6 次剔除丢包与重传 → 按延迟顺序分批（每批 40 个，最多 120 个）用真实 SNI 做 2 次 TLS 验证，只保留 HTTP 200、落点在美国、TLS 约 2×RTT 的，直到找够 12 个 → 入选入口做 WebSocket 握手（须 101 且无安全质询）→ 取中位延迟低于 200 ms 的入口生成 `/?ed=2560` 链接到剪贴板与文件（不足 3 个时改为生成最快的美国落点入口并标记 PARTIAL）→ 同事导入并启用后，经 v2rayN 本地代理验证出口国家为 US 并测真连接延迟。详细操作指引、参数、结果解读与还原见该目录的 README。管理员打包：`Compress-Archive -Path tools\colleague-kit\* -DestinationPath smj-colleague-kit.zip`。
+**同事一键配置包（推荐）**：[tools/colleague-kit](./tools/colleague-kit/README.md)，Windows 双击 `setup-nodes.cmd`，macOS 运行 `setup-nodes.command`。脚本依次：适配 Cloudflare One / WARP 模式（未安装、已断开、代理模式不动；全隧道时切代理模式，切不动则测量期间临时断开并在结束后加排除网段）→ 在同事自己的网络里对 Cloudflare 全部 IPv4 段每个 /24 探测一个 IP（约 1 分钟）→ 最快 150 个各复测 6 次剔除丢包与重传 → 按延迟顺序分批（每批 40 个，最多 120 个）用真实 SNI 做 2 次 TLS 验证，只保留 HTTP 200、落点在美国、TLS 约 2×RTT 的，直到找够 12 个 → 入选入口做 WebSocket 握手（须 101 且无安全质询）→ 取中位延迟低于 200 ms 的入口生成 `/?ed=2560` 链接到剪贴板与文件（不足 3 个时改为生成最快的美国落点入口并标记 PARTIAL）→ 同事导入并启用后，经 v2rayN 本地代理验证出口国家为 US 并测真连接延迟。详细操作指引、参数、结果解读与还原见该目录的 README。管理员打包：在该目录运行 `Pack-Kit.ps1`，它从本机 V2RAYN-PRIVATE.md 取 UUID 写成 uuid.txt 一起压进 zip，同事零输入；zip 含凭据，私下发送。
 
 **不扫描、直接用预选组**（Windows）：单文件 [tools/latency/一键生成节点.ps1](./tools/latency/一键生成节点.ps1) 内置 ZY / A / B / C / D 五组入口（不含凭据），运行后选择组别、对本组入口做 3 次 TCP 建连测量并按延迟排序、输入 UUID（不回显）后生成带 `/?ed=2560` 的链接到剪贴板。用法见 [方式二](#方式二用一键脚本生成本组链接推荐)。预选组是管理员线路（中国联通）的测量结果，其他运营商的同事优先用上面的配置包在自己网络里选。
 

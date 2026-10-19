@@ -1,5 +1,4 @@
-﻿#Requires -Version 5.1
-<#
+﻿<#
 .SYNOPSIS
   同事一键配置（Windows）：在你自己的网络里挑出到 Cloudflare 入口延迟最低、落点在美国的地址，
   生成 v2rayN 节点链接，并验证出口在美国。只依赖 Windows 自带的 PowerShell 5.1 与 curl.exe。
@@ -44,6 +43,7 @@
 .EXAMPLE
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Setup-Nodes.ps1 -ReportOnly
 #>
+#Requires -Version 5.1
 [CmdletBinding()]
 param(
   [string]$HostName = 'dfvpn.smjtools.com',

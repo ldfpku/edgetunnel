@@ -1,5 +1,4 @@
-﻿#Requires -Version 5.1
-<#
+﻿<#
 .SYNOPSIS
   一键生成本组 v2rayN 节点链接。单个文件即可运行，不依赖仓库里的其他文件，也不含任何凭据。
 
@@ -34,6 +33,7 @@
 .EXAMPLE
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\一键生成节点.ps1 -Group D -ListOnly
 #>
+#Requires -Version 5.1
 [CmdletBinding()]
 param(
   [ValidateSet('ZY', 'A', 'B', 'C', 'D', '')][string]$Group = '',
