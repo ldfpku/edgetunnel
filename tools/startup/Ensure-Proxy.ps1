@@ -105,13 +105,17 @@ function Find-V2rayN {
         }
     } catch { }
     $candidates += @(
-        'C:\tools\v2rayN-windows-64\v2rayN.exe',
+        (Join-Path ($env:SystemDrive + '\') 'tools\v2rayN-windows-64\v2rayN.exe'),
         (Join-Path $env:ProgramFiles 'v2rayN\v2rayN.exe'),
         (Join-Path $env:LOCALAPPDATA 'Programs\v2rayN\v2rayN.exe'),
         (Join-Path $env:USERPROFILE 'Desktop\v2rayN-windows-64\v2rayN.exe'),
-        (Join-Path $env:USERPROFILE 'Downloads\v2rayN-windows-64\v2rayN.exe'),
-        'D:\tools\v2rayN-windows-64\v2rayN.exe'
+        (Join-Path $env:USERPROFILE 'Downloads\v2rayN-windows-64\v2rayN.exe')
     )
+    foreach ($root in (Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root -Unique)) {
+        if ($root -ne ($env:SystemDrive + '\')) {
+            $candidates += Join-Path $root 'tools\v2rayN-windows-64\v2rayN.exe'
+        }
+    }
     foreach ($c in $candidates) { if ($c -and (Test-Path $c)) { return $c } }
     return $null
 }
@@ -291,7 +295,7 @@ function Test-Latency {
     $median = $sorted[[int][math]::Floor($sorted.Count / 2)].Ms
     Write-Log ('入口延迟：最低 {0} ms，中位 {1} ms，{2}/{3} 个低于 {4} ms' -f $sorted[0].Ms, $median, $fast.Count, $results.Count, $MaxLatencyMs)
     if ($fast.Count -lt $MinFastEntries) {
-        Add-Problem ('低于 {0} ms 的入口不足 {1} 个。若入口流量仍经 WARP，先处理 WARP；否则运行 tools\latency\Optimize-Colleague.ps1 在本网络重新选入口' -f $MaxLatencyMs, $MinFastEntries)
+        Add-Problem ('低于 {0} ms 的入口不足 {1} 个。若入口流量仍经 WARP，先处理 WARP；否则用 tools\colleague-kit 一键配置包在本网络重新选入口' -f $MaxLatencyMs, $MinFastEntries)
         return $false
     }
     return $true

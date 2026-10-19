@@ -9,7 +9,19 @@
 | Windows | `一键设置.cmd` | `powershell -ExecutionPolicy Bypass -File .\Setup-Proxy.ps1` |
 | macOS | `一键设置.command` | `bash setup-proxy.sh` |
 
+### 独立单文件版（Windows）
+
+只需单独分发 `一键设置-独立版.ps1`，不依赖本目录中的其他脚本。运行命令：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\一键设置-独立版.ps1
+```
+
+支持 `-DryRun`、`-RepeatMinutes 30`、`-WarpPolicy disconnect`、`-EntryIPs 1.2.3.4,5.6.7.8`、`-V2rayNPath <exe>`、`-SkipTask` 和 `-Uninstall`。计划任务会回调该脚本本身；如果系统拒绝创建计划任务，会尝试写入当前用户登录启动项（不支持定时复查）。设置完成后不要移动或删除脚本。macOS 仍使用上表中的目录版脚本。
+
 把整个目录放在以后不会删的位置再双击。约 1–2 分钟，不需要输入；最后看到 `RESULT: OK — 出口美国，入口延迟达标` 即完成。先看会改什么、不改动：`一键设置.cmd -DryRun` / `bash setup-proxy.sh --dry-run`。
+
+Windows 一键命令按自身所在目录定位脚本，不依赖固定盘符或启动时的工作目录，支持带空格的路径和网络共享目录。v2rayN 优先按指定路径、正在运行的进程、计划任务和常见安装位置查找，再自动检查各盘的 `tools\v2rayN-windows-64\v2rayN.exe`。注册开机任务后若移动脚本目录，请在新位置重新运行一键设置。
 
 每个功能块的作用、怎样用命令自己检验、怎样还原，见 **[GUIDE.md](./GUIDE.md)**。
 
@@ -17,6 +29,7 @@
 
 | 文件 | 作用 |
 | --- | --- |
+| `一键设置-独立版.ps1` | Windows 独立单文件版：自包含设置、检查、计划任务注册与卸载 |
 | `一键设置.cmd` / `Setup-Proxy.ps1` | Windows 一键：环境检查 → 应用并检查 → 注册计划任务 → 触发任务验证 → 汇总 |
 | `Ensure-Proxy.ps1` | Windows 检查与修正脚本，计划任务每次登录后静默运行的就是它 |
 | `Install-StartupTask.ps1` | 注册 / 删除计划任务 `SMJ-EnsureProxy`（无窗口、不需要管理员） |
