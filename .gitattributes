@@ -2,3 +2,9 @@
 tools/latency/*.sh text eol=lf
 tools/latency/*.py text eol=lf
 tools/latency/*.ps1 text eol=crlf
+
+# 同事一键配置包：shell 脚本必须 LF，PowerShell / cmd 用 CRLF
+tools/colleague-kit/*.sh text eol=lf
+tools/colleague-kit/*.command text eol=lf
+tools/colleague-kit/*.ps1 text eol=crlf
+tools/colleague-kit/*.cmd text eol=crlf

@@ -1,6 +1,6 @@
 # 入口延迟测量脚本
 
-这些脚本用于从**当前网络**挑选到 Cloudflare 入口延迟最低、最稳定的 IP，并复现 v2rayN 的两种延迟指标。它们不含任何凭据；`xray_realdelay.sh` 与 `make_links.py` 在运行时从被 Git 忽略的 `V2RAYN-PRIVATE.md` 读取 UUID，不会打印或写入仓库；`一键生成节点.ps1` 与 `Optimize-Colleague.ps1` 由使用者输入 UUID（不回显）。
+这些脚本用于从**当前网络**挑选到 Cloudflare 入口延迟最低、最稳定的 IP，并复现 v2rayN 的两种延迟指标。它们不含任何凭据；`xray_realdelay.sh` 与 `make_links.py` 在运行时从被 Git 忽略的 `V2RAYN-PRIVATE.md` 读取 UUID，不会打印或写入仓库；`一键生成节点.ps1` 由使用者输入 UUID（不回显）。同事端在自己网络里全量扫描并生成链接的一键配置包（Windows / macOS）在 [tools/colleague-kit](../colleague-kit/README.md)。
 
 测量前提：**断开 WARP**（`warp-cli disconnect`，测完 `warp-cli connect`），或先用 `warp-cli tunnel ip add-range` 把待测网段排除出隧道；否则测到的是 WARP 隧道的延迟。脚本已自行忽略 `HTTP_PROXY` 等环境代理。
 
@@ -12,7 +12,6 @@
 | `xray_realdelay.sh` | 用临时 xray 实例复现 v2rayN「真连接延迟」，并打印实际出口城市 |
 | `make_links.py` | 把 `IP:443#备注` 列表生成可导入 v2rayN 的完整分享链接（默认路径 `/?ed=2560`） |
 | `一键生成节点.ps1` | 同事端单文件脚本（仅依赖 Windows PowerShell 5.1）：内置 ZY / A / B / C / D 五组入口，对本组做 3 次 TCP 建连测量并排序，按输入的 UUID 生成 `/?ed=2560` 链接到剪贴板；`-ListOnly` 打印本组 `IP:443#备注` 列表 |
-| `Optimize-Colleague.ps1` | 同事端全量扫描脚本：仅依赖 Windows PowerShell 5.1 与 curl.exe；断开 WARP 扫描、验证落点、添加 WARP 排除、按输入的 UUID 生成 `/?ed=2560` 链接到剪贴板。内置组在同事网络里仍慢时使用 |
 
 典型流程（在仓库根目录执行）：
 

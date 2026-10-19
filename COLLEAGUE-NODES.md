@@ -10,7 +10,7 @@
 
 **“每组 6 个日本出口 + 6 个美国出口”的条件目前未满足。** Cloudflare 入口 IP 使用 Anycast，同一个 IP 会因访问者网络而连接不同机房；当前所有地址连接同一个 `aws:us-west-2` 放置的 Worker。区域提示控制执行位置，不保证出口国家；不能把入口按备注分为“日本 / 美国”就宣称具备对应出口。实际出口国家仍需各节点的端到端验证。
 
-Cloudflare 入口 IP 使用 Anycast，同一 IP 从不同运营商、不同时段可能落到不同机房；本文的落点与延迟只代表本机线路在测量时段的结果。各同事导入后仍要在自己的网络中做「测试服务器延迟」并启用最快的节点；若整组都慢，用 [tools/latency/Optimize-Colleague.ps1](./tools/latency/Optimize-Colleague.ps1) 在自己的网络里重新扫描。单次可用性检查不等于吞吐或最终出口国家，出口国家需经实际代理访问 IP 查询服务验证。逐节点验证记录见本机私密文件。
+Cloudflare 入口 IP 使用 Anycast，同一 IP 从不同运营商、不同时段可能落到不同机房；本文的落点与延迟只代表本机线路在测量时段的结果。各同事导入后仍要在自己的网络中做「测试服务器延迟」并启用最快的节点；若整组都慢，用同事一键配置包 [tools/colleague-kit](./tools/colleague-kit/README.md) 在自己的网络里重新扫描并生成链接（Windows / macOS）。单次可用性检查不等于吞吐或最终出口国家，出口国家需经实际代理访问 IP 查询服务验证。逐节点验证记录见本机私密文件。
 
 ## ZY 组：2026-10-05 实测优选入口（16 个）
 
@@ -109,19 +109,9 @@ v2rayN 侧另有一项可选优化：直连 Cloudflare 入口不需要「TLS 分
 
 ### 一键脚本
 
-**先用内置组生成（几秒钟）**：单文件 [tools/latency/一键生成节点.ps1](./tools/latency/一键生成节点.ps1) 内置 ZY / A / B / C / D 五组入口（不含凭据），运行后选择组别、对本组入口做 3 次 TCP 建连测量并按延迟排序、输入 UUID（不回显）后生成带 `/?ed=2560` 的链接到剪贴板。用法见 [方式二](#方式二用一键脚本生成本组链接推荐)。
+**同事一键配置包（推荐）**：[tools/colleague-kit](./tools/colleague-kit/README.md)，Windows 双击 `setup-nodes.cmd`，macOS 运行 `setup-nodes.command`。脚本依次：适配 Cloudflare One / WARP 模式（未安装、已断开、代理模式不动；全隧道时切代理模式，切不动则测量期间临时断开并在结束后加排除网段）→ 在同事自己的网络里对 Cloudflare 全部 IPv4 段每个 /24 探测一个 IP（约 1 分钟）→ 最快 150 个各复测 6 次剔除丢包与重传 → 按延迟顺序分批（每批 40 个，最多 120 个）用真实 SNI 做 2 次 TLS 验证，只保留 HTTP 200、落点在美国、TLS 约 2×RTT 的，直到找够 12 个 → 入选入口做 WebSocket 握手（须 101 且无安全质询）→ 取中位延迟低于 200 ms 的入口生成 `/?ed=2560` 链接到剪贴板与文件（不足 3 个时改为生成最快的美国落点入口并标记 PARTIAL）→ 同事导入并启用后，经 v2rayN 本地代理验证出口国家为 US 并测真连接延迟。详细操作指引、参数、结果解读与还原见该目录的 README。管理员打包：`Compress-Archive -Path tools\colleague-kit\* -DestinationPath smj-colleague-kit.zip`。
 
-**内置入口在你的网络里仍然慢时，再做全量扫描**：仓库内 [tools/latency/Optimize-Colleague.ps1](./tools/latency/Optimize-Colleague.ps1) 只依赖 Windows 自带的 PowerShell 5.1 和 curl.exe，不需要 Python。把该文件发给同事，在 PowerShell 中运行：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Optimize-Colleague.ps1 -Prefix B
-```
-
-脚本依次：检测 WARP 并临时断开（结束时自动重连）→ 对 Cloudflare 全部 IPv4 段每个 /24 探测一个 IP 的 TCP 建连（约 1 分钟）→ 对最快 150 个复测 6 次，剔除丢包或抖动 → 对前 36 个用真实 SNI 各做 2 次 TLS 验证并读出落点机房，剔除 TLS 异常慢的落点 → 把选中入口所在 /24 加入 WARP 排除列表 → 用同事输入的 UUID（不回显，不写盘）生成带 `/?ed=2560` 的 12 条链接并复制到剪贴板。随后在 v2rayN 选中分组按 Ctrl+V 导入，右键「测试服务器延迟」，启用最快的节点。
-
-参数：`-Top` 节点数（默认 12）、`-Prefix` 备注前缀（默认 CF，备注形如 B-SJC-01）、`-ReportOnly` 只测量不生成链接、`-NoWarpChange` 不改动 WARP（需自行先关闭 WARP）、`-OutFile` 把链接另存为文件（含凭据）。
-
-受组织 Zero Trust 策略管理的 WARP 设备可能无法断开或添加排除；脚本会提示。此时请管理员在 Zero Trust 的 Split Tunnels 中排除选出的网段，或者使用 v2rayN 期间断开 WARP。
+**不扫描、直接用预选组**（Windows）：单文件 [tools/latency/一键生成节点.ps1](./tools/latency/一键生成节点.ps1) 内置 ZY / A / B / C / D 五组入口（不含凭据），运行后选择组别、对本组入口做 3 次 TCP 建连测量并按延迟排序、输入 UUID（不回显）后生成带 `/?ed=2560` 的链接到剪贴板。用法见 [方式二](#方式二用一键脚本生成本组链接推荐)。预选组是管理员线路（中国联通）的测量结果，其他运营商的同事优先用上面的配置包在自己网络里选。
 
 ### 开机自检脚本
 

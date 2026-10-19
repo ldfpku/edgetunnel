@@ -204,7 +204,7 @@ $links = @($entries | ForEach-Object {
 })
 $text = ($links -join "`r`n")
 if ($OutFile) {
-  $full = [IO.Path]::GetFullPath((Join-Path (Get-Location).ProviderPath $OutFile))
+  $full = $OutFile; if (-not [IO.Path]::IsPathRooted($full)) { $full = Join-Path (Get-Location).ProviderPath $full }; $full = [IO.Path]::GetFullPath($full)
   [IO.File]::WriteAllText($full, $text + "`r`n", (New-Object System.Text.UTF8Encoding $false))
   Write-Host ('链接已写入 {0}（含凭据，勿提交或公开）。' -f $full) -ForegroundColor Yellow
 }

@@ -82,7 +82,7 @@ $b=New-Object byte[] 32; $r=[Security.Cryptography.RandomNumberGenerator]::Creat
 
 本账户已创建 `DF_KV` 命名空间；[wrangler.jsonc](./wrangler.jsonc) 中的运行时绑定名称必须是 `KV`，不是 `DF_KV`。创建命名空间还需要独立的 Workers KV 创建权限；Workers → Admin 不包含 KV 管理权限。当前 `remote: true` 会让本地开发访问真实 KV，测试时注意不要修改生产数据。
 
-四组入口候选地址及 v2rayN 导入方法见 [COLLEAGUE-NODES.md](./COLLEAGUE-NODES.md)：A / B / C 各 12 个，D 组 24 个，共 60 个，2026-10-18 起按本机实测重选（SJC 落点主用 + LAX 备用，互不重复且不与 ZY 组重复）。同事可用单文件脚本 [tools/latency/一键生成节点.ps1](./tools/latency/一键生成节点.ps1) 一键生成本组链接。入口地址不代表实际出口国家。
+四组入口候选地址及 v2rayN 导入方法见 [COLLEAGUE-NODES.md](./COLLEAGUE-NODES.md)：A / B / C 各 12 个，D 组 24 个，共 60 个，2026-10-18 起按本机实测重选（SJC 落点主用 + LAX 备用，互不重复且不与 ZY 组重复）。同事在自己网络里自动选入口并生成链接用一键配置包 [tools/colleague-kit](./tools/colleague-kit/README.md)（Windows / macOS，自动适配 WARP 模式，只选落点在美国、延迟低于 200 ms 的入口，并验证出口为 US）；不扫描直接用预选组可用单文件脚本 [tools/latency/一键生成节点.ps1](./tools/latency/一键生成节点.ps1)。入口地址不代表实际出口国家。
 
 当前部署使用单独的 `UUID` Secret 固定节点凭据，`ADMIN` 仍仅作为管理员密码使用。本机 [V2RAYN-PRIVATE.md](./V2RAYN-PRIVATE.md) 提供四组可直接导入的完整节点链接，均连接当前美西放置的 Worker，四组共享凭据而非独立账户；该文件含真实凭据并被 Git 忽略，不应公开或提交。旧的派生 UUID 节点需重新导入。
 
